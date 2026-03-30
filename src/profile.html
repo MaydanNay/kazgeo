@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный Кабинет Инвестора | KAZGEOMINER</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="dashboard-body">
+    <header class="header scrolled">
+        <nav class="nav container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/logo.jpg" alt="KAZGEOMINER Logo" class="logo-img">
+                </a>
+            </div>
+            <div class="nav-actions">
+                <div class="lang-switch">
+                    <button class="lang-btn active" data-lang="ru">RU</button>
+                    <span class="divider">|</span>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                </div>
+                <a href="index.html" class="btn btn-sm btn-outline" data-ru="На главную" data-en="Back to Home">На главную</a>
+                <button class="btn btn-sm btn-primary" onclick="handleLogout()" data-ru="Выйти" data-en="Logout">Выйти</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="dashboard-main container">
+        <div class="dashboard-header animate">
+            <h1 data-ru="Личный кабинет инвестора" data-en="Investor Dashboard">Личный кабинет инвестора</h1>
+            <p class="user-welcome" id="welcome-msg" data-ru="Добро пожаловать" data-en="Welcome back">Добро пожаловать</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Status Card -->
+            <section class="dashboard-card status-card animate">
+                <h2 data-ru="Ваш статус" data-en="Your Status">Ваш статус</h2>
+                <div class="status-content">
+                    <div id="status-badge" class="status-badge-lg pending">
+                        <span id="status-text" data-ru="На проверке" data-en="Pending Review">На проверке</span>
+                    </div>
+                    <p id="status-desc" class="status-description" 
+                       data-ru="Ваша заявка на доступ к документам находится на рассмотрении. Обычно это занимает не более 24 часов." 
+                       data-en="Your document access request is currently under review. This usually takes less than 24 hours.">
+                       Ваша заявка на доступ к документам находится на рассмотрении. Обычно это занимает не более 24 часов.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Profile Info Card -->
+            <section class="dashboard-card info-card animate">
+                <h2 data-ru="Информация" data-en="Information">Информация</h2>
+                <div class="info-list">
+                    <div class="info-item">
+                        <label data-ru="Email:" data-en="Email:">Email:</label>
+                        <span id="profile-email">---</span>
+                    </div>
+                    <div class="info-item">
+                        <label data-ru="Аккаунт создан:" data-en="Account Created:">Аккаунт создан:</label>
+                        <span id="profile-created">---</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Documents Section -->
+        <section class="documents-dashboard animate">
+            <h2 data-ru="Доступные документы" data-en="Available Documents">Доступные документы</h2>
+            <div id="dashboard-docs-grid" class="dashboard-docs-grid">
+                <!-- Loading state -->
+                <div class="loading-docs" data-ru="Загрузка списка документов..." data-en="Loading document list...">Загрузка списка документов...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer-mini">
+        <div class="container">
+            <p>&copy; 2024 KAZGEOMINER. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="profile-script.js"></script>
+</body>
+
+</html>
