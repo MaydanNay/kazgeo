@@ -199,7 +199,6 @@ function setupEventListeners() {
     if (authBtn) {
         authBtn.addEventListener('click', (e) => {
             const user = JSON.parse(sessionStorage.getItem('kazgeo_current_user'));
-            console.log("Auth button clicked, current session user:", !!user);
             if (user) {
                 openProfilePage();
             } else {
@@ -208,10 +207,34 @@ function setupEventListeners() {
         });
     }
 
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const navLinks = document.getElementById('nav-links');
+    if (mobileMenuBtn && navLinks) {
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('mobile-open');
+        });
+        // Close on nav link click
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => navLinks.classList.remove('mobile-open'));
+        });
+    }
+
+    // Active nav link on scroll
+    const sections = document.querySelectorAll('section[id], footer[id]');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) header.classList.add('scrolled');
         else header.classList.remove('scrolled');
         revealOnScroll();
+
+        let current = '';
+        sections.forEach(sec => {
+            if (window.scrollY >= sec.offsetTop - 120) current = sec.getAttribute('id');
+        });
+        document.querySelectorAll('.nav-links a').forEach(a => {
+            a.classList.remove('active');
+            if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+        });
     });
 
     document.querySelectorAll('.lang-btn').forEach(btn => {
