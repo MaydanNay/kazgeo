@@ -1,6 +1,7 @@
 // --- Admin Logic (Backend Powered) ---
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_HOST = window.location.hostname || 'localhost';
+const API_BASE_URL = `http://${API_HOST}:8000/api`;
 const ADMIN_PASSWORD_SECRET = 'admin123';
 const LOGIN_KEY = 'kazgeo_admin_logged_in';
 
@@ -39,8 +40,8 @@ const cIconBox = document.getElementById('confirm-icon-box');
 const cIconEl = document.getElementById('confirm-icon-el');
 const cTitle = document.getElementById('confirm-title');
 const cMsg = document.getElementById('confirm-msg');
-const cOk = document.getElementById('confirm-ok');
-const cCancel = document.getElementById('confirm-cancel');
+let cOk = document.getElementById('confirm-ok');
+let cCancel = document.getElementById('confirm-cancel');
 
 // --- Initialization ---
 
@@ -66,9 +67,10 @@ async function showAdminPanel() {
 }
 
 async function refreshData() {
-    // Fetch both to ensure they are available for merged rendering
     await fetchRequests(); 
     await renderUsers();
+    await renderRequests();
+    await fetchNDATemplate();
     await renderDocuments();
 }
 
@@ -101,13 +103,114 @@ tabBtns.forEach(btn => {
             }
         });
 
-        if (tab === 'users') {
-            await fetchRequests();
-            await renderUsers();
+        if (tab === 'users') await renderUsers();
+        if (tab === 'requests') {
+            await renderRequests();
+            updatePendingBadge();
         }
-        if (tab === 'documents') await renderDocuments();
+        if (tab === 'documents') {
+            await fetchNDATemplate();
+            await renderDocuments();
+        }
     });
 });
+
+let currentNDATemplate = null;
+
+async function fetchNDATemplate() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/nda-template`);
+        if (response.ok) {
+            currentNDATemplate = await response.json();
+            renderNDATemplate();
+        }
+    } catch (e) {
+        console.error("Failed to fetch NDA template:", e);
+    }
+}
+
+function renderNDATemplate() {
+    const nameEl = document.getElementById('nda-template-name');
+    const detailsEl = document.getElementById('nda-template-details');
+    const viewBtn = document.getElementById('view-template-btn');
+
+    if (currentNDATemplate) {
+        const fileName = currentNDATemplate.file_path.split('/').pop();
+        nameEl.textContent = "NDA_Template.docx"; // User-friendly name
+        detailsEl.innerHTML = `
+            <span style="display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="file-text" style="width: 14px; height: 14px;"></i> ${currentNDATemplate.file_type.toUpperCase()}</span>
+            <span style="display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="database" style="width: 14px; height: 14px;"></i> ${currentNDATemplate.file_size}</span>
+            <span style="display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> ${new Date(currentNDATemplate.created_at).toLocaleDateString('ru-RU')}</span>
+        `;
+        viewBtn.disabled = false;
+        viewBtn.onclick = () => {
+             const publicUrl = `http://${API_HOST}:8000/api/uploads/documents/${fileName}`;
+             window.open(publicUrl, '_blank');
+        };
+    } else {
+        nameEl.textContent = "Шаблон не установлен";
+        detailsEl.innerHTML = "Загрузите файл, который инвесторы будут скачивать для ознакомления и подписи.";
+        viewBtn.disabled = true;
+    }
+    lucide.createIcons();
+}
+
+// NDA Template Event Listeners
+const changeTemplateBtn = document.getElementById('change-template-btn');
+const ndaTemplateInput = document.getElementById('nda-template-input');
+
+if (changeTemplateBtn && ndaTemplateInput) {
+    changeTemplateBtn.addEventListener('click', () => {
+        ndaTemplateInput.click();
+    });
+
+    ndaTemplateInput.addEventListener('change', async (e) => {
+        if (e.target.files.length === 0) return;
+        
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const btn = document.getElementById('change-template-btn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="spinner"></i> Загрузка...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/nda-template/upload`, {
+                method: 'POST',
+                headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET },
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("Шаблон успешно обновлен!");
+                await fetchNDATemplate();
+                await renderDocuments();
+            } else {
+                alert("Ошибка при загрузке шаблона.");
+            }
+        } catch (error) {
+            console.error("Template upload error:", error);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            e.target.value = ''; // Reset input
+        }
+    });
+}
+
+function updatePendingBadge() {
+    const pendingCount = requests.filter(r => r.status === 'pending').length;
+    const tab = document.querySelector('.tab-btn[data-tab="requests"]');
+    if (tab) {
+        if (pendingCount > 0) {
+            tab.innerHTML = `Заявки NDA <span class="pending-badge" style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.65rem; margin-left: 5px;">${pendingCount}</span>`;
+        } else {
+            tab.innerHTML = 'Заявки NDA';
+        }
+    }
+}
 
 loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -139,43 +242,23 @@ async function renderUsers() {
         
         userList.innerHTML = '';
         users.forEach(user => {
-            // Find request for this user
-            const req = requests.find(r => r.email === user.email);
-            
-            let ndaContent = '<span class="role-badge viewer">Нет запроса</span>';
-            if (req) {
-                const fileName = req.file_path.split('/').pop();
-                const publicUrl = `http://localhost:8000/api/uploads/${fileName}`;
-                const statusLabel = req.status === 'approved' ? 'ОДОБРЕН' : req.status === 'rejected' ? 'ОТКЛОНЕН' : 'ОЖИДАЕТ';
-                
-                // Only show download link when pending for review
-                const fileLink = req.status === 'pending' 
-                    ? `<a href="${publicUrl}" target="_blank" class="btn-link" style="font-size: 0.7rem;">Проверить NDA.docx</a>` 
-                    : '';
-                
-                ndaContent = `
-                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                        <span class="role-badge ${req.status}">${statusLabel}</span>
-                        ${fileLink}
-                    </div>
-                `;
-            }
-
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${user.id}</td>
                 <td>${user.name}</td>
                 <td>${user.email}</td>
-                <td>${ndaContent}</td>
-                <td><span class="role-badge ${user.is_approved ? 'approved' : 'pending'}">${user.is_approved ? 'Активен' : 'Ожидает'}</span></td>
+                <td>
+                    <span class="role-badge ${user.is_approved ? 'approved' : 'pending'}">
+                        ${user.is_approved ? 'Активен' : 'Ожидает доступа'}
+                    </span>
+                </td>
                 <td class="actions">
-                    ${req && req.status === 'pending' ? `
-                        <button class="btn btn-primary btn-sm" onclick="approveRequest(${req.id})" title="Одобрить NDA">Одобрить NDA</button>
+                    ${!user.is_approved ? `
+                        <button class="btn btn-primary btn-sm" onclick="approveUser(${user.id})">Активировать вручную</button>
                     ` : ''}
-                    ${!user.is_approved && (!req || req.status === 'approved') ? `
-                        <button class="btn btn-primary btn-sm" onclick="approveUser(${user.id})">Активировать</button>
-                    ` : ''}
-                    <button class="btn-icon delete" onclick="deleteUser(${user.id})"><i data-lucide="trash-2"></i></button>
+                    <button class="btn-icon delete" onclick="deleteUser(${user.id})" title="Удалить аккаунт">
+                        <i data-lucide="trash-2"></i>
+                    </button>
                 </td>
             `;
             userList.appendChild(tr);
@@ -183,7 +266,54 @@ async function renderUsers() {
         lucide.createIcons();
     } catch (error) {
         console.error("Failed to fetch users:", error);
-        alert("Ошибка при загрузке списка пользователей. Возможно, сессия истекла.");
+    }
+}
+
+async function renderRequests() {
+    try {
+        await fetchRequests(); 
+        requestList.innerHTML = '';
+        
+        // Sort by timestamp descending
+        const sortedRequests = [...requests].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        sortedRequests.forEach(req => {
+                const fileName = req.file_path ? req.file_path.split('/').pop() : 'document';
+                const publicUrl = req.file_path ? `http://${API_HOST}:8000/api/uploads/${fileName}` : '#';
+                const statusLabel = req.status === 'approved' ? 'ОДОБРЕН' : req.status === 'rejected' ? 'ОТКЛОНЕН' : 'ОЖИДАЕТ';
+            const date = new Date(req.timestamp).toLocaleDateString('ru-RU', { 
+                day: '2-digit', month: '2-digit', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${req.id}</td>
+                <td>
+                    <div style="font-weight: 500;">${req.name}</div>
+                    <div style="font-size: 0.75rem; color: #999;">${req.email}</div>
+                </td>
+                <td style="font-size: 0.75rem;">${date}</td>
+                <td><span class="role-badge ${req.status}">${statusLabel}</span></td>
+                <td>
+                    <a href="${publicUrl}" target="_blank" class="btn-link" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
+                        <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Просмотреть NDA
+                    </a>
+                </td>
+                <td class="actions">
+                    ${req.status === 'pending' ? `
+                        <button class="btn btn-primary btn-sm" onclick="approveRequest(${req.id})">Одобрить</button>
+                        <button class="btn btn-secondary btn-sm" onclick="rejectRequest(${req.id})">Отклонить</button>
+                    ` : ''}
+                    <button class="btn-icon delete" onclick="deleteNDARequest(${req.id})" title="Удалить заявку"><i data-lucide="trash-2"></i></button>
+                </td>
+            `;
+            requestList.appendChild(tr);
+        });
+        lucide.createIcons();
+        updatePendingBadge();
+    } catch (error) {
+        console.error("Failed to render requests:", error);
     }
 }
 
@@ -193,11 +323,27 @@ async function deleteUser(id) {
         msg: 'Это действие необратимо. Пользователь потеряет доступ к системе.',
         icon: 'warning',
         confirmText: 'Удалить',
-        onConfirm: () => {
-             alert("Удаление пользователя еще не реализовано на бэкенде в целях безопасности.");
+        onConfirm: async () => {
+             try {
+                const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                });
+                if (response.ok) {
+                    alert("Пользователь успешно удален.");
+                    await refreshData();
+                } else {
+                    const err = await response.json();
+                    alert(err.detail || "Ошибка при удалении.");
+                }
+             } catch (error) {
+                 console.error("Delete user failed:", error);
+                 alert("Произошла ошибка при удалении пользователя.");
+             }
         }
     });
 }
+
 
 addUserBtn.addEventListener('click', () => {
     editingUserId = null;
@@ -370,6 +516,33 @@ async function viewNDA(id) {
     }
 }
 
+async function deleteNDARequest(id) {
+    showConfirmDialog({
+        title: 'Удалить запрос NDA?',
+        msg: 'Файл будет навсегда удален. Это позволит пользователю загрузить новый документ.',
+        icon: 'warning',
+        confirmText: 'Удалить',
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/requests/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                });
+                if (response.ok) {
+                    alert("Запрос успешно удален.");
+                    await refreshData();
+                } else {
+                    const err = await response.json();
+                    alert(err.detail || "Ошибка при удалении запроса.");
+                }
+            } catch (error) {
+                console.error("NDA delete failed:", error);
+                alert("Ошибка при удалении запроса.");
+            }
+        }
+    });
+}
+
 async function approveUser(user_id) {
     showConfirmDialog({
         title: 'Активировать аккаунт?',
@@ -413,18 +586,22 @@ function showConfirmDialog({ title, msg, icon, confirmText, onConfirm }) {
     // Handle Buttons (Clean up previous listeners)
     const newOk = cOk.cloneNode(true);
     cOk.parentNode.replaceChild(newOk, cOk);
+    cOk = newOk; // Update global reference to the new button in the DOM
+
     const newCancel = cCancel.cloneNode(true);
     cCancel.parentNode.replaceChild(newCancel, cCancel);
+    cCancel = newCancel; // Update global reference
 
-    newOk.addEventListener('click', () => {
+    cOk.addEventListener('click', () => {
         onConfirm();
         confirmModal.style.display = 'none';
     });
 
-    newCancel.addEventListener('click', () => {
+    cCancel.addEventListener('click', () => {
         confirmModal.style.display = 'none';
     });
 }
+
 
 // Expose functions to global scope
 window.deleteUser = deleteUser;
@@ -433,6 +610,7 @@ window.approveRequest = approveRequest;
 window.rejectRequest = rejectRequest;
 window.viewNDA = viewNDA;
 window.deleteDocument = deleteDocument;
+window.deleteNDARequest = deleteNDARequest;
 
 // Initialize
 init();

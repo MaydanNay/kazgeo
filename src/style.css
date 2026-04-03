@@ -1,5 +1,5 @@
 /* =============================================
-   KAZGEOMINER — Design System
+   KAZGEOMINER - Design System
    Color palette inspired by talgagroup.com
    ============================================= */
 
@@ -8,13 +8,16 @@
 :root {
     /* Talga-inspired palette */
     --bg-primary: #ffffff;
-    --bg-secondary: #f2f2f2;       /* Talga's warm off-white */
+    --bg-secondary: #f2f2f2;
+    /* Talga's warm off-white */
     --bg-tertiary: #eaeaea;
     --bg-card: #ffffff;
-    --text-primary: #1a1a1b;       /* Talga's deep graphite */
+    --text-primary: #1a1a1b;
+    /* Talga's deep graphite */
     --text-secondary: #5a5a5a;
     --text-muted: #9a9a9a;
-    --accent-primary: #00a7e1;     /* Talga's cyan-blue accent */
+    --accent-primary: #00a7e1;
+    /* Talga's cyan-blue accent */
     --accent-primary-rgb: 0, 167, 225;
     --accent-secondary: #0090c4;
     --accent-light: #e6f7fd;
@@ -91,7 +94,7 @@ a {
 }
 
 /* =============================================
-   HEADER / NAV — clean white bar like example
+   HEADER / NAV - clean white bar like example
    ============================================= */
 .header {
     position: fixed;
@@ -330,7 +333,10 @@ a {
 .hero h1 {
     font-size: clamp(3rem, 7vw, 7rem);
     font-weight: 800;
-    color: #ffffff;
+    background: linear-gradient(to right, #00e911 20%, #00af50 30%, #0071c0 50%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     letter-spacing: -0.03em;
     line-height: 1;
     margin-bottom: 1rem;
@@ -338,7 +344,6 @@ a {
 }
 
 .hero h1 span {
-    color: rgba(255, 255, 255, 0.45);
     font-weight: 300;
 }
 
@@ -432,7 +437,7 @@ a {
 }
 
 /* =============================================
-   WHY SECTION — like "Why thousands choose..."
+   WHY SECTION - like "Why thousands choose..."
    ============================================= */
 .why-section {
     padding: 80px 0;
@@ -794,7 +799,7 @@ a {
 }
 
 /* =============================================
-   INVESTORS — Step Cards
+   INVESTORS - Step Cards
    ============================================= */
 .investors {
     background: var(--bg-secondary);
@@ -961,7 +966,7 @@ a {
 }
 
 /* =============================================
-   HOW IT WORKS — "Booking made easy" equivalent
+   HOW IT WORKS - "Booking made easy" equivalent
    ============================================= */
 .steps-section {
     background: white;
@@ -1041,7 +1046,7 @@ a {
     font-family: var(--font-heading);
     font-size: 1.375rem;
     font-weight: 800;
-    color: white;
+    color: #1a1a1b;
     letter-spacing: -0.02em;
 }
 
@@ -1339,8 +1344,277 @@ a {
 }
 
 .dashboard-body {
-    background: #f8fafc;
+    background-color: #f0f2f5;
+    background-image: radial-gradient(at 0% 0%, rgba(29, 78, 216, 0.05) 0px, transparent 50%),
+        radial-gradient(at 50% 0%, rgba(30, 64, 175, 0.03) 0px, transparent 50%);
+    min-height: 100vh;
     color: var(--text-primary);
+}
+
+.dashboard-main {
+    padding-top: 120px;
+    padding-bottom: 80px;
+}
+
+.dashboard-header {
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.user-welcome {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.dashboard-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.dashboard-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.dashboard-card h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Status Badge Large */
+.status-badge-lg {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.25rem;
+}
+
+.status-badge-lg.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-badge-lg.approved {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.9375rem;
+}
+
+.info-list {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.info-item span {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Documents Dashboard */
+.documents-dashboard {
+    margin-top: 4rem;
+}
+
+.documents-dashboard h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+}
+
+.dashboard-docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.doc-card-premium {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.doc-card-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent-primary);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.doc-card-premium:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 167, 225, 0.3);
+    box-shadow: var(--shadow-lg);
+}
+
+.doc-card-premium:hover::before {
+    opacity: 1;
+}
+
+.doc-icon-wrapper {
+    width: 54px;
+    height: 54px;
+    background: var(--accent-light);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.doc-card-premium:hover .doc-icon-wrapper {
+    background: var(--accent-primary);
+    color: white;
+    transform: scale(1.1);
+}
+
+.doc-icon-wrapper i,
+.doc-icon-wrapper svg {
+    width: 24px;
+    height: 24px;
+}
+
+.doc-details {
+    flex-grow: 1;
+}
+
+.doc-details h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--text-primary);
+}
+
+.doc-details p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+
+.loading-docs {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Transitions and animations */
+.animate {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dashboard-header.animate {
+    animation-delay: 0.1s;
+}
+
+.status-card.animate {
+    animation-delay: 0.2s;
+}
+
+.info-card.animate {
+    animation-delay: 0.3s;
+}
+
+.documents-dashboard.animate {
+    animation-delay: 0.4s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+
+    .dashboard-docs-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* =============================================

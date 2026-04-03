@@ -14,7 +14,7 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    requests = relationship("NDARequest", back_populates="user")
+    requests = relationship("NDARequest", back_populates="user", cascade="all, delete-orphan")
 
 class NDARequest(Base):
     __tablename__ = "nda_requests"
@@ -36,4 +36,5 @@ class Document(Base):
     file_path = Column(String)
     file_size = Column(String)
     file_type = Column(String) # e.g. pdf, docx
+    is_nda_template = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)

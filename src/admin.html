@@ -219,7 +219,7 @@
         <div id="admin-panel" class="admin-panel">
             <div class="admin-header">
                 <div class="logo">
-                    <span class="logo-text">KAZ<span>GEO</span>MINER <span>АДМИН</span></span>
+                    <span class="logo-text">KAZ<span>GEO</span>MINER <span>- АДМИН</span></span>
                 </div>
                 <button class="btn btn-secondary btn-sm" id="logout-btn">
                     Выйти
@@ -227,13 +227,14 @@
             </div>
 
             <div class="tab-nav">
-                <button class="tab-btn active" data-tab="users">Пользователи и Запросы</button>
+                <button class="tab-btn active" data-tab="users">Пользователи</button>
+                <button class="tab-btn" data-tab="requests">Заявки NDA</button>
                 <button class="tab-btn" data-tab="documents">Документы</button>
             </div>
 
             <div id="users-view" class="view-section active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h3>Управление пользователями и доступом</h3>
+                    <h3>Управление пользователями</h3>
                     <button class="btn btn-primary btn-sm" id="add-user-btn">
                         <i data-lucide="plus"></i> Добавить пользователя
                     </button>
@@ -242,10 +243,9 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Пользователь</th>
-                            <th>Эл. почта</th>
-                            <th>NDA Статус</th>
-                            <th>Аккаунт</th>
+                            <th>Имя</th>
+                            <th>Email</th>
+                            <th>Статус доступа</th>
                             <th>Действия</th>
                         </tr>
                     </thead>
@@ -255,10 +255,73 @@
                 </table>
             </div>
 
+            <div id="requests-view" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h3>Заявки на доступ (NDA)</h3>
+                </div>
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Инвестор</th>
+                            <th>Дата</th>
+                            <th>Статус</th>
+                            <th>Документ</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="request-list">
+                        <!-- Requests will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
 
             <div id="documents-view" class="view-section">
+                <style>
+                    .nda-template-card {
+                        background: linear-gradient(135deg, #ffffff 0%, #fcfcfc 100%);
+                        border: 1px solid #eeeeee;
+                        padding: 2.5rem;
+                        margin-bottom: 4rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        position: relative;
+                        overflow: hidden;
+                    }
+                    .nda-template-card::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 4px;
+                        height: 100%;
+                        background: var(--accent-primary);
+                    }
+                </style>
+                <!-- NDA Template Section -->
+                <div class="nda-template-card">
+                    <div>
+                        <div class="section-label" style="margin-bottom: 0.75rem;">Активный шаблон для инвесторов</div>
+                        <h3 id="nda-template-name" style="margin-bottom: 0.5rem;">Не установлен</h3>
+                        <div id="nda-template-details" style="font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 1rem;">
+                            <!-- Will be populated -->
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <input type="file" id="nda-template-input" style="display: none;" accept=".docx,.pdf">
+                        <button class="btn btn-secondary btn-sm" id="view-template-btn">
+                            <i data-lucide="eye"></i> Посмотреть
+                        </button>
+                        <button class="btn btn-primary btn-sm" id="change-template-btn">
+                            <i data-lucide="refresh-cw"></i> Заменить файл
+                        </button>
+                    </div>
+                </div>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h3>Управление документами</h3>
+                    <h3>Общие документы проекта</h3>
                     <button class="btn btn-primary btn-sm" id="add-doc-btn">
                         <i data-lucide="upload"></i> Загрузить документ
                     </button>

@@ -45,6 +45,7 @@ class DocumentBase(BaseModel):
     file_path: str
     file_size: str
     file_type: str
+    is_nda_template: bool = False
 
 class DocumentCreate(DocumentBase):
     pass

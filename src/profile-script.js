@@ -40,10 +40,10 @@ async function loadProfileDetails() {
         if (user.is_approved) {
             statusBadge.className = 'status-badge-lg approved';
             statusText.textContent = lang === 'ru' ? 'Доступ Одобрен' : 'Access Approved';
-            statusDesc.textContent = lang === 'ru' 
+            statusDesc.textContent = lang === 'ru'
                 ? 'Вам предоставлен полный доступ к документам проекта. Теперь вы можете скачать презентацию и другие материалы.'
                 : 'You have been granted full access to the project documents. You can now download the presentation and other materials.';
-            
+
             await loadApprovedDocuments();
         } else {
             statusBadge.className = 'status-badge-lg pending';
@@ -51,7 +51,7 @@ async function loadProfileDetails() {
             statusDesc.textContent = lang === 'ru'
                 ? 'Ваша заявка на доступ к документам находится на рассмотрении. Обычно это занимает не более 24 часов.'
                 : 'Your document access request is currently under review. This usually takes less than 24 hours.';
-            
+
             document.getElementById('dashboard-docs-grid').innerHTML = `
                 <div class="empty-docs-msg">
                     <p data-ru="Документы будут доступны после одобрения NDA администратором." 
@@ -71,7 +71,7 @@ async function loadProfileDetails() {
 async function loadApprovedDocuments() {
     const lang = getActiveLang();
     const docsGrid = document.getElementById('dashboard-docs-grid');
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/documents?t=${Date.now()}`);
         const docs = await response.json();
@@ -86,7 +86,7 @@ async function loadApprovedDocuments() {
             // doc.file_path is like "backend/uploads/documents/file.pdf"
             // We need to serve it via "/api/uploads/documents/file.pdf"
             const publicUrl = `http://localhost:8000/api/uploads/documents/${doc.file_path.split('/').pop()}`;
-            
+
             // Map icon based on type
             let icon = 'file-text';
             if (['pdf'].includes(doc.file_type)) icon = 'file-text';
@@ -107,7 +107,7 @@ async function loadApprovedDocuments() {
                 </div>
             `;
         }).join('');
-        
+
         lucide.createIcons();
     } catch (error) {
         console.error("Failed to load documents:", error);
@@ -136,7 +136,7 @@ function setupLanguageSwitcher() {
                 const text = el.getAttribute(`data-${lang}`);
                 if (text) el.textContent = text;
             });
-            
+
             loadProfileDetails(); // Refresh dynamic content
         });
     });

@@ -2,7 +2,7 @@ import shutil
 import uuid
 import os
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -149,6 +149,9 @@ def get_all_requests(db: Session = Depends(get_db), auth: bool = Depends(verify_
     result = []
     for req in requests:
         user = db.query(models.User).filter(models.User.id == req.user_id).first()
+        if not user:
+            # Skip requests from non-existent users
+            continue
         result.append({
             "id": req.id,
             "name": user.name,
@@ -162,6 +165,10 @@ def get_all_requests(db: Session = Depends(get_db), auth: bool = Depends(verify_
 @app.get("/api/documents", response_model=List[schemas.Document])
 def get_documents(db: Session = Depends(get_db)):
     return db.query(models.Document).all()
+
+@app.get("/api/nda-template", response_model=Optional[schemas.Document])
+def get_nda_template(db: Session = Depends(get_db)):
+    return db.query(models.Document).filter(models.Document.is_nda_template == True).first()
 
 @app.post("/api/admin/documents/upload")
 async def upload_document(
@@ -207,16 +214,51 @@ def delete_document(doc_id: int, db: Session = Depends(get_db), auth: bool = Dep
     db.commit()
     return {"status": "deleted"}
 
+@app.post("/api/admin/nda-template/upload")
+async def upload_nda_template(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    auth: bool = Depends(verify_admin)
+):
+    # Unmark existing template
+    existing = db.query(models.Document).filter(models.Document.is_nda_template == True).all()
+    for doc in existing:
+        doc.is_nda_template = False
+    
+    # Save new file
+    file_id = f"template_{uuid.uuid4()}_{file.filename}"
+    file_path = os.path.join(DOCS_DIR, file_id)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    file_size = get_file_size_fmt(os.path.getsize(file_path))
+    file_type = file.filename.split('.')[-1].lower() if '.' in file.filename else 'file'
+
+    new_doc = models.Document(
+        title_ru="Шаблон NDA (Активный)",
+        title_en="NDA Template (Active)",
+        file_path=file_path,
+        file_size=file_size,
+        file_type=file_type,
+        is_nda_template=True
+    )
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+    return new_doc
+
 @app.post("/api/admin/approve/{request_id}")
 def approve_nda_request(request_id: int, db: Session = Depends(get_db), auth: bool = Depends(verify_admin)):
     req = db.query(models.NDARequest).filter(models.NDARequest.id == request_id).first()
     if not req:
-        raise HTTPException(status_code=404, detail="Запрос не найден")
+        raise HTTPException(status_code=404, detail=f"Запрос NDA с ID {request_id} не найден")
     
     req.status = "approved"
     user = db.query(models.User).filter(models.User.id == req.user_id).first()
     if user:
         user.is_approved = True
+    else:
+        raise HTTPException(status_code=404, detail=f"Пользователь для этого запроса (ID {req.user_id}) не найден")
     
     db.commit()
     return {"status": "approved"}
@@ -246,6 +288,55 @@ def reject_nda_request(request_id: int, db: Session = Depends(get_db), auth: boo
     db.commit()
     return {"status": "success"}
 
+@app.delete("/api/admin/requests/{request_id}")
+def delete_nda_request(request_id: int, db: Session = Depends(get_db), auth: bool = Depends(verify_admin)):
+    req = db.query(models.NDARequest).filter(models.NDARequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Запрос не найден")
+    
+    # Delete file from disk
+    if req.file_path and os.path.exists(req.file_path):
+        try:
+            os.remove(req.file_path)
+        except Exception as e:
+            print(f"Failed to delete file {req.file_path}: {e}")
+    
+    # If the user was approved based on this request, reset their status
+    user = req.user
+    if user and user.is_approved:
+        # Check if they have other approved requests
+        other_approved = db.query(models.NDARequest).filter(
+            models.NDARequest.user_id == user.id,
+            models.NDARequest.id != request_id,
+            models.NDARequest.status == "approved"
+        ).count()
+        if other_approved == 0:
+            user.is_approved = False
+    
+    db.delete(req)
+    db.commit()
+    return {"status": "deleted"}
+
+
 @app.get("/api/admin/users", response_model=List[schemas.User])
 def get_all_users(db: Session = Depends(get_db), auth: bool = Depends(verify_admin)):
     return db.query(models.User).all()
+
+@app.delete("/api/admin/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db), auth: bool = Depends(verify_admin)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    # Clean up NDA files from disk
+    for req in user.requests:
+        if req.file_path and os.path.exists(req.file_path):
+            try:
+                os.remove(req.file_path)
+            except Exception as e:
+                print(f"Failed to delete file {req.file_path}: {e}")
+    
+    db.delete(user)
+    db.commit()
+    return {"status": "deleted"}
+

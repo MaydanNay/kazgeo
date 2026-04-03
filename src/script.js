@@ -21,6 +21,7 @@ function init() {
     setupEventListeners(); // Set listeners first
     updateAuthUI();
     revealOnScroll();
+    fetchNDATemplate(); // Load dynamic NDA template
 }
 
 function updateAuthUI() {
@@ -113,6 +114,46 @@ function showNDAStep(step) {
     document.getElementById('nda-step-1').style.display = step === 1 ? 'block' : 'none';
     document.getElementById('nda-step-2').style.display = step === 2 ? 'block' : 'none';
     document.getElementById('nda-step-3').style.display = step === 3 ? 'block' : 'none';
+    if (step === 2) fetchNDATemplate(); // Ensure template is fresh when reaching step 2
+}
+
+async function fetchNDATemplate() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/nda-template`);
+        if (response.ok) {
+            const template = await response.json();
+            if (!template) return;
+            
+            const fileName = template.file_path.split('/').pop();
+            const downloadUrl = `http://localhost:8000/api/uploads/documents/${fileName}`;
+            
+            // Update the download link in the modal (NDA Step 2)
+            const downloadBtn = document.querySelector('#nda-step-2 a[download]');
+            if (downloadBtn) {
+                downloadBtn.href = downloadUrl;
+                const span = downloadBtn.querySelector('span');
+                if (span) {
+                    const text = `Скачать ${fileName}`;
+                    span.setAttribute('data-ru', text);
+                    span.setAttribute('data-en', `Download ${fileName}`);
+                    span.textContent = getActiveLang() === 'ru' ? text : `Download ${fileName}`;
+                }
+            }
+
+            // Update any document items that refer to the NDA
+            document.querySelectorAll('.doc-item').forEach(item => {
+                const span = item.querySelector('span');
+                if (span && (span.textContent.includes('NDA') || span.getAttribute('data-ru').includes('NDA'))) {
+                    item.onclick = (e) => {
+                        e.preventDefault();
+                        handleDocumentClick(downloadUrl, 'NDA Template', 'NDA Template');
+                    };
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Failed to load NDA template:", e);
+    }
 }
 
 // --- Form Submissions ---
