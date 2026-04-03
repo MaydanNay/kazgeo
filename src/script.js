@@ -210,29 +210,13 @@ loginFormPublic.addEventListener('submit', handleLogin);
 // --- Navigation & Core UI ---
 
 async function handleDocumentClick(file, titleRu, titleEn) {
-    const lang = getActiveLang();
-    
     if (!currentUser) {
         openLoginModal();
         return;
     }
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/check-access/${currentUser.email}`);
-        const data = await response.json();
-
-        if (data.approved) {
-            const link = document.createElement('a');
-            link.href = file;
-            link.download = file;
-            link.click();
-        } else {
-            alert(lang === 'ru' ? "Сначала необходимо подписать NDA и дождаться одобрения." : "Sign NDA first and wait for approval.");
-            openProfilePage();
-        }
-    } catch (error) {
-        console.error("Access check error:", error);
-    }
+    // Если пользователь авторизован, перенаправляем его в личный кабинет
+    openProfilePage();
 }
 
 function setupEventListeners() {
