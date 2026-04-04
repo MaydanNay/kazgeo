@@ -16,6 +16,24 @@ const loginFormPublic = document.getElementById('login-form-public');
 
 let currentUser = JSON.parse(sessionStorage.getItem('kazgeo_current_user')) || null;
 
+// --- Helper Functions ---
+function cleanFilename(filename) {
+    if (!filename) return "";
+    // Pattern: template_uuid_filename
+    if (filename.startsWith('template_')) {
+        const parts = filename.split('_');
+        if (parts.length >= 3) {
+            return parts.slice(2).join('_');
+        }
+    }
+    // Pattern: uuid_filename
+    const parts = filename.split('_');
+    if (parts.length >= 2 && parts[0].length === 36 && parts[0].includes('-')) {
+        return parts.slice(1).join('_');
+    }
+    return filename;
+}
+
 // --- Initialization ---
 
 function init() {
@@ -134,10 +152,11 @@ async function fetchNDATemplate() {
                 downloadBtn.href = downloadUrl;
                 const span = downloadBtn.querySelector('span');
                 if (span) {
-                    const text = `Скачать ${fileName}`;
+                    const cleanName = cleanFilename(fileName);
+                    const text = `Скачать ${cleanName}`;
                     span.setAttribute('data-ru', text);
-                    span.setAttribute('data-en', `Download ${fileName}`);
-                    span.textContent = getActiveLang() === 'ru' ? text : `Download ${fileName}`;
+                    span.setAttribute('data-en', `Download ${cleanName}`);
+                    span.textContent = getActiveLang() === 'ru' ? text : `Download ${cleanName}`;
                 }
             }
 

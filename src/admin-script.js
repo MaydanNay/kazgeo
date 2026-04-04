@@ -11,6 +11,24 @@ let requests = [];
 let documents = [];
 let editingUserId = null;
 
+// --- Helper Functions ---
+function cleanFilename(filename) {
+    if (!filename) return "";
+    // Pattern: template_uuid_filename
+    if (filename.startsWith('template_')) {
+        const parts = filename.split('_');
+        if (parts.length >= 3) {
+            return parts.slice(2).join('_');
+        }
+    }
+    // Pattern: uuid_filename
+    const parts = filename.split('_');
+    if (parts.length >= 2 && parts[0].length === 36 && parts[0].includes('-')) {
+        return parts.slice(1).join('_');
+    }
+    return filename;
+}
+
 // Selectors
 const loginSection = document.getElementById('login-section');
 const adminPanel = document.getElementById('admin-panel');
@@ -136,7 +154,8 @@ function renderNDATemplate() {
 
     if (currentNDATemplate) {
         const fileName = currentNDATemplate.file_path.split('/').pop();
-        nameEl.textContent = "NDA_Template.docx"; // User-friendly name
+        const cleanName = cleanFilename(fileName);
+        nameEl.textContent = cleanName; 
         detailsEl.innerHTML = `
             <span style="display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="file-text" style="width: 14px; height: 14px;"></i> ${currentNDATemplate.file_type.toUpperCase()}</span>
             <span style="display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="database" style="width: 14px; height: 14px;"></i> ${currentNDATemplate.file_size}</span>
@@ -309,7 +328,7 @@ async function renderRequests() {
                 <td><span class="role-badge ${req.status}">${statusLabel}</span></td>
                 <td>
                     <a href="${publicUrl}" target="_blank" class="btn-link" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem;">
-                        <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Просмотреть NDA
+                        <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> ${cleanFilename(fileName)}
                     </a>
                 </td>
                 <td class="actions">
@@ -382,6 +401,7 @@ async function renderDocuments() {
                 <td>${doc.id}</td>
                 <td>${doc.title_ru}</td>
                 <td>${doc.title_en}</td>
+                <td style="font-size: 0.7rem; color: #888;">${cleanFilename(doc.file_path.split('/').pop())}</td>
                 <td>${doc.file_size}</td>
                 <td><span class="role-badge viewer">${doc.file_type.toUpperCase()}</span></td>
                 <td class="actions">

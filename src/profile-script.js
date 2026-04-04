@@ -10,6 +10,24 @@ if (!currentUser) {
     window.location.href = 'index.html';
 }
 
+// --- Helper Functions ---
+function cleanFilename(filename) {
+    if (!filename) return "";
+    // Pattern: template_uuid_filename
+    if (filename.startsWith('template_')) {
+        const parts = filename.split('_');
+        if (parts.length >= 3) {
+            return parts.slice(2).join('_');
+        }
+    }
+    // Pattern: uuid_filename
+    const parts = filename.split('_');
+    if (parts.length >= 2 && parts[0].length === 36 && parts[0].includes('-')) {
+        return parts.slice(1).join('_');
+    }
+    return filename;
+}
+
 // --- Initialization ---
 function init() {
     loadProfileDetails();
