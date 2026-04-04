@@ -284,6 +284,23 @@ function setupEventListeners() {
     });
 }
 
+function openImageModal(src) {
+    const modal = document.getElementById('image-modal');
+    const expandedImg = document.getElementById('expanded-image');
+    if (modal && expandedImg) {
+        expandedImg.src = src;
+        modal.style.display = 'flex';
+    }
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('image-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.getElementById('expanded-image').src = '';
+    }
+}
+
 const revealOnScroll = () => {
     document.querySelectorAll('.reveal').forEach(el => {
         if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('active');
@@ -299,5 +316,7 @@ window.closeLoginModal = closeLoginModal;
 window.openProfilePage = openProfilePage;
 window.handleLogout = handleLogout;
 window.showNDAStep = showNDAStep;
+window.openImageModal = openImageModal;
+window.closeImageModal = closeImageModal;
 
 init();
