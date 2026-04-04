@@ -1,9 +1,9 @@
 // --- Admin Logic (Backend Powered) ---
 
-const API_HOST = window.location.hostname || 'localhost';
-const API_BASE_URL = `http://${API_HOST}:8000/api`;
-const ADMIN_PASSWORD_SECRET = 'admin123';
+const API_BASE_URL = window.location.port === '3000' ? 'http://localhost:8000/api' : '/api';
+const UPLOAD_BASE = window.location.port === '3000' ? 'http://localhost:8000/api/uploads' : '/api/uploads';
 const LOGIN_KEY = 'kazgeo_admin_logged_in';
+const ADMIN_SECRET_KEY = 'kazgeo_admin_secret'; // Key to store the password in session
 
 // State
 let users = [];
@@ -77,7 +77,7 @@ async function refreshData() {
 async function fetchRequests() {
     try {
         const response = await fetch(`${API_BASE_URL}/admin/requests`, {
-            headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+            headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
         });
         if (response.ok) {
             requests = await response.json();
@@ -144,7 +144,7 @@ function renderNDATemplate() {
         `;
         viewBtn.disabled = false;
         viewBtn.onclick = () => {
-             const publicUrl = `http://${API_HOST}:8000/api/uploads/documents/${fileName}`;
+             const publicUrl = `${UPLOAD_BASE}/documents/${fileName}`;
              window.open(publicUrl, '_blank');
         };
     } else {
@@ -179,7 +179,7 @@ if (changeTemplateBtn && ndaTemplateInput) {
         try {
             const response = await fetch(`${API_BASE_URL}/admin/nda-template/upload`, {
                 method: 'POST',
-                headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET },
+                headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) },
                 body: formData
             });
 
@@ -212,21 +212,33 @@ function updatePendingBadge() {
     }
 }
 
-loginForm.addEventListener('submit', (e) => {
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = document.getElementById('password').value;
     
-    if (password === ADMIN_PASSWORD_SECRET) {
-        sessionStorage.setItem(LOGIN_KEY, 'true');
-        showAdminPanel();
-        loginError.style.display = 'none';
-    } else {
+    // Validate password by attempting a simple API call
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
+            headers: { 'X-Admin-Password': password }
+        });
+        
+        if (response.ok) {
+            sessionStorage.setItem(LOGIN_KEY, 'true');
+            sessionStorage.setItem(ADMIN_SECRET_KEY, password);
+            showAdminPanel();
+            loginError.style.display = 'none';
+        } else {
+            loginError.style.display = 'block';
+        }
+    } catch (error) {
+        console.error("Login verification failed:", error);
         loginError.style.display = 'block';
     }
 });
 
 logoutBtn.addEventListener('click', () => {
     sessionStorage.removeItem(LOGIN_KEY);
+    sessionStorage.removeItem(ADMIN_SECRET_KEY);
     showLogin();
 });
 
@@ -235,7 +247,7 @@ logoutBtn.addEventListener('click', () => {
 async function renderUsers() {
     try {
         const response = await fetch(`${API_BASE_URL}/admin/users`, {
-            headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+            headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
         });
         if (!response.ok) throw new Error('Unauthorized');
         users = await response.json();
@@ -279,7 +291,7 @@ async function renderRequests() {
         
         sortedRequests.forEach(req => {
                 const fileName = req.file_path ? req.file_path.split('/').pop() : 'document';
-                const publicUrl = req.file_path ? `http://${API_HOST}:8000/api/uploads/${fileName}` : '#';
+                const publicUrl = req.file_path ? `${UPLOAD_BASE}/${fileName}` : '#';
                 const statusLabel = req.status === 'approved' ? 'ОДОБРЕН' : req.status === 'rejected' ? 'ОТКЛОНЕН' : 'ОЖИДАЕТ';
             const date = new Date(req.timestamp).toLocaleDateString('ru-RU', { 
                 day: '2-digit', month: '2-digit', year: 'numeric', 
@@ -327,7 +339,7 @@ async function deleteUser(id) {
              try {
                 const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
                     method: 'DELETE',
-                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                    headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
                 });
                 if (response.ok) {
                     alert("Пользователь успешно удален.");
@@ -408,7 +420,7 @@ docForm.addEventListener('submit', async (e) => {
     try {
         const response = await fetch(`${API_BASE_URL}/admin/documents/upload`, {
             method: 'POST',
-            headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET },
+            headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) },
             body: formData
         });
 
@@ -438,7 +450,7 @@ async function deleteDocument(id) {
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/documents/${id}`, {
                     method: 'DELETE',
-                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                    headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
                 });
                 if (response.ok) {
                     alert("Документ успешно удален.");
@@ -465,7 +477,7 @@ async function approveRequest(id) {
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/approve/${id}`, { 
                     method: 'POST',
-                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                    headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
                 });
                 if (response.ok) {
                     alert("Запрос успешно одобрен.");
@@ -492,7 +504,7 @@ async function rejectRequest(id) {
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/reject/${id}`, { 
                     method: 'POST', 
-                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                    headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
                 });
                 if (response.ok) {
                     alert("Запрос отклонен.");
@@ -526,7 +538,7 @@ async function deleteNDARequest(id) {
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/requests/${id}`, {
                     method: 'DELETE',
-                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                    headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
                 });
                 if (response.ok) {
                     alert("Запрос успешно удален.");
@@ -553,7 +565,7 @@ async function approveUser(user_id) {
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/approve-user/${user_id}`, { 
                     method: 'POST',
-                    headers: { 'X-Admin-Password': ADMIN_PASSWORD_SECRET }
+                    headers: { 'X-Admin-Password': sessionStorage.getItem(ADMIN_SECRET_KEY) }
                 });
                 if (response.ok) {
                     alert("Аккаунт пользователя активирован.");

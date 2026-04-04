@@ -2,7 +2,8 @@
 
 lucide.createIcons();
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = window.location.port === '3000' ? 'http://localhost:8000/api' : '/api';
+const UPLOAD_BASE = window.location.port === '3000' ? 'http://localhost:8000/api/uploads' : '/api/uploads';
 const header = document.querySelector('.header');
 const authBtn = document.getElementById('auth-btn');
 
@@ -125,7 +126,7 @@ async function fetchNDATemplate() {
             if (!template) return;
             
             const fileName = template.file_path.split('/').pop();
-            const downloadUrl = `http://localhost:8000/api/uploads/documents/${fileName}`;
+            const downloadUrl = `${UPLOAD_BASE}/documents/${fileName}`;
             
             // Update the download link in the modal (NDA Step 2)
             const downloadBtn = document.querySelector('#nda-step-2 a[download]');

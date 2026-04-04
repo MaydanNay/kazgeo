@@ -1,7 +1,8 @@
 // Initialize Lucide icons
 lucide.createIcons();
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = window.location.port === '3000' ? 'http://localhost:8000/api' : '/api';
+const UPLOAD_BASE = window.location.port === '3000' ? 'http://localhost:8000/api/uploads' : '/api/uploads';
 let currentUser = JSON.parse(sessionStorage.getItem('kazgeo_current_user')) || null;
 
 // --- Protection Check ---
@@ -85,7 +86,7 @@ async function loadApprovedDocuments() {
             // Map file path to public URL
             // doc.file_path is like "backend/uploads/documents/file.pdf"
             // We need to serve it via "/api/uploads/documents/file.pdf"
-            const publicUrl = `http://localhost:8000/api/uploads/documents/${doc.file_path.split('/').pop()}`;
+            const publicUrl = `${UPLOAD_BASE}/documents/${doc.file_path.split('/').pop()}`;
 
             // Map icon based on type
             let icon = 'file-text';

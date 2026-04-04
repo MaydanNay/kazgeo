@@ -2,7 +2,11 @@ import shutil
 import uuid
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 from typing import List, Optional
+
+# Load .env file
+load_dotenv()
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -21,7 +25,7 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 # Admin Password for API protection
-ADMIN_PASSWORD_SECRET = "admin123"
+ADMIN_PASSWORD_SECRET = os.getenv("ADMIN_PASSWORD_SECRET", "admin123")
 
 def verify_admin(x_admin_password: str = Header(None)):
     if x_admin_password != ADMIN_PASSWORD_SECRET:
